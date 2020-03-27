@@ -1,4 +1,4 @@
-import org.apache.spark.SparkContext
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
 
 
@@ -26,12 +26,12 @@ object Exercise extends App {
    */
   def getSparkContext(): SparkContext = {
     // Spark 1
-    // val conf = new SparkConf().setAppName("Exercise 302 - Spark1")
-    // new SparkContext(conf)
+    val conf = new SparkConf().setAppName("Exercise 302 - Spark1")
+    new SparkContext(conf)
 
     // Spark 2
-    val spark = SparkSession.builder.appName("Exercise 302 - Spark2").getOrCreate()
-    spark.sparkContext
+    //val spark = SparkSession.builder.appName("Exercise 302 - Spark2").getOrCreate()
+    //spark.sparkContext
   }
 
   /**
@@ -49,7 +49,7 @@ object Exercise extends App {
    * @param sc
    */
   def exercise1(sc: SparkContext): Unit = {
-    val rddWeather = sc.textFile("hdfs:/bigdata/dataset/weather-sample").map(WeatherData.extract)
+    val rddWeather = sc.textFile("hdfs:/bigdata/datasets/weather-sample").map(WeatherData.extract)
 
     // Average temperature for every month
     rddWeather
@@ -75,7 +75,7 @@ object Exercise extends App {
     import org.apache.spark.HashPartitioner
     val p = new HashPartitioner(8)
 
-    val rddStation = sc.textFile("hdfs:/bigdata/dataset/weather-info/stations.csv").map(StationData.extract)
+    val rddStation = sc.textFile("hdfs:/bigdata/datasets/weather-info/stations.csv").map(StationData.extract)
 
     // val rddS1 = rddStation.partitionBy(p).keyBy(x => x.usaf + x.wban).cache()
     // val rddS2 = rddStation.partitionBy(p).cache().keyBy(x => x.usaf + x.wban)
@@ -104,8 +104,8 @@ object Exercise extends App {
    * @param sc
    */
   def exercise3(sc: SparkContext): Unit = {
-    val rddWeather = sc.textFile("hdfs:/bigdata/dataset/weather-sample").map(WeatherData.extract)
-    val rddStation = sc.textFile("hdfs:/bigdata/dataset/weather-info/stations.csv").map(StationData.extract)
+    val rddWeather = sc.textFile("hdfs:/bigdata/datasets/weather-sample").map(WeatherData.extract)
+    val rddStation = sc.textFile("hdfs:/bigdata/datasets/weather-info/stations.csv").map(StationData.extract)
 
     // TODO exercise
   }
@@ -116,7 +116,7 @@ object Exercise extends App {
    */
   def exercise4(sc: SparkContext): Unit = {
     import org.apache.spark.storage.StorageLevel._
-    val rddWeather = sc.textFile("hdfs:/bigdata/dataset/weather-sample").map(WeatherData.extract)
+    val rddWeather = sc.textFile("hdfs:/bigdata/datasets/weather-sample").map(WeatherData.extract)
 
     sc.getPersistentRDDs.foreach(_._2.unpersist())
 
@@ -144,8 +144,8 @@ object Exercise extends App {
   def exercise5(sc: SparkContext): Unit = {
     import org.apache.spark.HashPartitioner
 
-    val rddWeather = sc.textFile("hdfs:/bigdata/dataset/weather-sample").map(WeatherData.extract)
-    val rddStation = sc.textFile("hdfs:/bigdata/dataset/weather-info/stations.csv").map(StationData.extract)
+    val rddWeather = sc.textFile("hdfs:/bigdata/datasets/weather-sample").map(WeatherData.extract)
+    val rddStation = sc.textFile("hdfs:/bigdata/datasets/weather-info/stations.csv").map(StationData.extract)
 
     val rddW = rddWeather
       .sample(false,0.1)
