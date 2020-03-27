@@ -51,8 +51,10 @@ object Exercise extends App {
   def exercise1(sc: SparkContext): Unit = {
     val rddWeather = sc.textFile("hdfs:/bigdata/datasets/weather-sample").map(WeatherData.extract)
 
+    //usaf e vban sono le nostre chiavi di join
+
     // Average temperature for every month
-    rddWeather
+    /*rddWeather
       .filter(_.temperature<999)
       .map(x => (x.month, x.temperature))
       .aggregateByKey((0.0,0.0))((a,v)=>(a._1+v,a._2+1),(a1,a2)=>(a1._1+a2._1,a1._2+a2._2))
@@ -64,7 +66,23 @@ object Exercise extends App {
       .filter(_.temperature<999)
       .map(x => (x.month, x.temperature))
       .reduceByKey((x,y)=>{if(x<y) y else x})
+      .collect()*/
+
+    val persistedRDD = rddWeather.
+      coalesce(8)
+      .filter(_.temperature<999)
+      .map(x => (x.month, x.temperature))
+      .cache()
+
+    persistedRDD
+      .aggregateByKey((0.0,0.0))((a,v)=>(a._1+v,a._2+1),(a1,a2)=>(a1._1+a2._1,a1._2+a2._2))
+      .map({case(k,v)=>(k,v._1/v._2)})
       .collect()
+
+    persistedRDD
+      .reduceByKey((x,y)=>{if(x<y) y else x}).
+      collect()
+
   }
 
   /**
