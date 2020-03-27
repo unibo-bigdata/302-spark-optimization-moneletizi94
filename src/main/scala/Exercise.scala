@@ -97,7 +97,8 @@ object Exercise extends App {
 
     // val rddS1 = rddStation.partitionBy(p).keyBy(x => x.usaf + x.wban).cache()
     // val rddS2 = rddStation.partitionBy(p).cache().keyBy(x => x.usaf + x.wban)
-    // val rddS3 = rddStation.keyBy(x => x.usaf + x.wban).partitionBy(p).cache()
+    val rddS3 = rddStation.keyBy(x => x.usaf + x.wban).partitionBy(p).cache()
+    //ha senso prima partizionare e poi mettere in cache; le prime due non sono perchè partitionBy deve essere chiamata su un RDD di tipo k,v
     // val rddS4 = rddStation.keyBy(x => x.usaf + x.wban).cache().partitionBy(p)
 
   }
