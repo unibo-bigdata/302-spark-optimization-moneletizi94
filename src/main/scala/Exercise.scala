@@ -123,10 +123,28 @@ object Exercise extends App {
    * @param sc
    */
   def exercise3(sc: SparkContext): Unit = {
+    import org.apache.spark.HashPartitioner
+    val p = new HashPartitioner(8)
+
     val rddWeather = sc.textFile("hdfs:/bigdata/datasets/weather-sample").map(WeatherData.extract)
     val rddStation = sc.textFile("hdfs:/bigdata/datasets/weather-info/stations.csv").map(StationData.extract)
 
-    // TODO exercise
+    val rddWeatherPartitioned = rddWeather.filter(_.temperature<999).keyBy(x => x.usaf + x.wban).partitionBy(p).cache()
+    val rddStationPartitioned = rddStation.keyBy(x => x.usaf + x.wban).partitionBy(p).cache()
+
+    val joinedRDD = rddStationPartitioned.join(rddWeatherPartitioned).cache() //metto in cache per riutlizzarlo più volte
+
+    joinedRDD.map({case (_,infoMerged) => (infoMerged._1.name, infoMerged._2.temperature)}).
+              reduceByKey((x,y)=>if(x>y) x else y).
+              collect()
+
+    joinedRDD.filter({case (_,infoMerged) => infoMerged._1.country=="IT"}).
+              map({case (_,infoMerged) => (infoMerged._1.name, infoMerged._2.temperature)}).
+              reduceByKey((x,y) => if(x > y) x else y).
+              map({case(k,v)=>(v,k)}).
+              sortByKey(false, 8).
+              collect()
+
   }
 
   /**
@@ -137,7 +155,7 @@ object Exercise extends App {
     import org.apache.spark.storage.StorageLevel._
     val rddWeather = sc.textFile("hdfs:/bigdata/datasets/weather-sample").map(WeatherData.extract)
 
-    sc.getPersistentRDDs.foreach(_._2.unpersist())
+    sc.getPersistentRDDs.foreach(_._2.unpersist()) //svuota il contenuto in memoria per fare pulizia
 
     val memRdd = rddWeather.sample(false,0.1).repartition(8).cache()
     val memSerRdd = memRdd.map(x=>x).persist(MEMORY_ONLY_SER)
